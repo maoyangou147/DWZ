@@ -10,6 +10,7 @@ import torch.nn as nn
 from ultralytics.nn.modules import (C1, C2, C3, C3TR, SPP, SPPF, Bottleneck, BottleneckCSP, C2f, C3Ghost, C3x, Classify,
                                     Concat, Conv, ConvTranspose, Detect, DWConv, DWConvTranspose2d, Ensemble, Focus,
                                     GhostBottleneck, GhostConv, Segment)
+from ultralytics.nn.models.sam import SAM
 from ultralytics.yolo.utils import DEFAULT_CONFIG_DICT, DEFAULT_CONFIG_KEYS, LOGGER, colorstr, yaml_load
 from ultralytics.yolo.utils.checks import check_yaml
 from ultralytics.yolo.utils.torch_utils import (fuse_conv_and_bn, initialize_weights, intersect_dicts, make_divisible,
@@ -156,7 +157,8 @@ class DetectionModel(BaseModel):
         # Build strides
         m = self.model[-1]  # Detect()
         if isinstance(m, (Detect, Segment)):
-            s = 256  # 2x min stride
+            # s = 256  # 2x min stride
+            s = 1024  # for ts-sam
             m.inplace = self.inplace
             forward = lambda x: self.forward(x)[0] if isinstance(m, Segment) else self.forward(x)
             m.stride = torch.tensor([s / x.shape[-2] for x in forward(torch.zeros(1, ch, s, s))])  # forward
@@ -165,6 +167,22 @@ class DetectionModel(BaseModel):
 
         # Init weights, biases
         initialize_weights(self)
+        sam_checkpoint = torch.load('/home/bob/experiment/ckpt/sam_vit_b_01ec64.pth')
+        sam_checkpoint = {f'0.{k}': v for k, v in sam_checkpoint.items() if 'image_encoder' in k}
+        self.model.load_state_dict(sam_checkpoint, strict=False)
+
+        # # 定义辅助函数来递归查找特定模块
+        # def find_module_by_name(module, name):
+        #     for module_name, submodule in module.named_modules():
+        #         if module_name == name:
+        #             return submodule
+        #     return None
+
+        # yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8l-seg.pt')['model']
+        # segment_ckpt = find_module_by_name(yolo_checkpoint, 'model.22')
+        # for name, param in self.model.named_parameters():
+        #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
+
         if verbose:
             self.info()
             LOGGER.info('')
@@ -391,12 +409,15 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             if m in {BottleneckCSP, C1, C2, C2f, C3, C3TR, C3Ghost, C3x}:
                 args.insert(2, n)  # number of repeats
                 n = 1
+        elif m is SAM:
+            args=[]
         elif m is nn.BatchNorm2d:
             args = [ch[f]]
         elif m is Concat:
             c2 = sum(ch[x] for x in f)
         elif m in {Detect, Segment}:
-            args.append([ch[x] for x in f])
+            # args.append([ch[x] for x in f])
+            args.append([256, 512, 512])  # for ts-sam
             if m is Segment:
                 args[2] = make_divisible(args[2] * gw, 8)
         else:

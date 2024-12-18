@@ -651,6 +651,7 @@ class Detect(nn.Module):
 
 class Segment(Detect):
     # YOLOv5 Segment head for segmentation models
+    # yolon  nc=80 nm=32 npr=256 ch=[64,128,256]
     def __init__(self, nc=80, nm=32, npr=256, ch=()):
         super().__init__(nc, ch)
         self.nm = nm  # number of masks

@@ -12,6 +12,8 @@ from .augment import *
 from .base import BaseDataset
 from .utils import HELP_URL, LOCAL_RANK, get_hash, img2label_paths, verify_image_label
 
+from torchvision import transforms as T
+
 
 class YOLODataset(BaseDataset):
     cache_version = 1.0  # dataset labels *.cache version, >= 1.0 for YOLOv8
@@ -128,6 +130,7 @@ class YOLODataset(BaseDataset):
         if self.augment:
             mosaic = self.augment and not self.rect
             transforms = mosaic_transforms(self, self.imgsz, hyp) if mosaic else affine_transforms(self.imgsz, hyp)
+            # transforms = Compose([LetterBox(new_shape=(self.imgsz, self.imgsz), scaleup=False)])  # for ts-sam
         else:
             transforms = Compose([LetterBox(new_shape=(self.imgsz, self.imgsz), scaleup=False)])
         transforms.append(
