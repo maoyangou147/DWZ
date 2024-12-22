@@ -49,16 +49,33 @@ class BaseModel(nn.Module):
           The last layer of the model.
         """
         y, dt = [], []  # outputs
+        # for m in self.model:
+        #     if m.f != -1:  # if not from previous layer
+        #         x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]  # from earlier layers
+        #     if profile:
+        #         self._profile_one_layer(m, x, dt)
+        #     x = m(x)  # run
+        #     y.append(x if m.i in self.save else None)  # save output
+        #     if visualize:
+        #         pass
+        #         # TODO: feature_visualization(x, m.type, m.i, save_dir=visualize)
         for m in self.model:
             if m.f != -1:  # if not from previous layer
                 x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]  # from earlier layers
             if profile:
                 self._profile_one_layer(m, x, dt)
-            x = m(x)  # run
-            y.append(x if m.i in self.save else None)  # save output
-            if visualize:
-                pass
-                # TODO: feature_visualization(x, m.type, m.i, save_dir=visualize)
+            if hasattr(m, 'backbone'):
+                x = m(x)
+                # if len(x) != 5:  # 0 - 5
+                #     x.insert(0, None)
+                for index, i in enumerate(x):
+                    if index in self.save:
+                        y.append(i)
+                    else:
+                        y.append(None)
+            else:
+                x = m(x)  # run
+                y.append(x if m.i in self.save else None)  # save output
         return x
 
     def _profile_one_layer(self, m, x, dt):
@@ -169,18 +186,25 @@ class DetectionModel(BaseModel):
         initialize_weights(self)
         sam_checkpoint = torch.load('/home/bob/experiment/ckpt/sam_vit_b_01ec64.pth')
         sam_checkpoint = {f'0.{k}': v for k, v in sam_checkpoint.items() if 'image_encoder' in k}
-        self.model.load_state_dict(sam_checkpoint, strict=False)
 
         # # 定义辅助函数来递归查找特定模块
-        # def find_module_by_name(module, name):
-        #     for module_name, submodule in module.named_modules():
-        #         if module_name == name:
-        #             return submodule
-        #     return None
+        def find_module_by_name(module, name):
+            for module_name, submodule in module.named_modules():
+                if module_name == name:
+                    return submodule
+            return None
 
-        # yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8l-seg.pt')['model']
-        # segment_ckpt = find_module_by_name(yolo_checkpoint, 'model.22')
+        yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8l-seg.pt')['model']
+        segment_ckpt = find_module_by_name(yolo_checkpoint, 'model.22')
+        segment_dict = segment_ckpt.state_dict()
+        keys_to_remove = ['cv2.2.0.conv.weight', 'cv3.0.2.weight', 'cv3.0.2.bias', 'cv3.1.2.weight', 'cv3.1.2.bias', 'cv3.2.0.conv.weight',
+                          'cv3.2.2.weight', 'cv3.2.2.bias', 'cv4.2.0.conv.weight']
+        segment_dict = {f'1.{k}': v for k, v in segment_dict.items() if k not in keys_to_remove}
+        merge_dict = {**sam_checkpoint, **segment_dict}
+        self.model.load_state_dict(merge_dict, strict=False)
         # for name, param in self.model.named_parameters():
+        #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
+        # for name, param in segment_ckpt.named_parameters():
         #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
 
         if verbose:
@@ -390,8 +414,10 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
         if verbose:
             LOGGER.info(f"{colorstr('activation:')} {act}")  # print
 
+    backbone=False
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
     for i, (f, n, m, args) in enumerate(d['backbone'] + d['head']):  # from, number, module, args
+        t=m
         m = eval(m) if isinstance(m, str) else m  # eval strings
         for j, a in enumerate(args):
             with contextlib.suppress(NameError):
@@ -409,29 +435,52 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             if m in {BottleneckCSP, C1, C2, C2f, C3, C3TR, C3Ghost, C3x}:
                 args.insert(2, n)  # number of repeats
                 n = 1
-        elif m is SAM:
-            args=[]
+        elif m in {SAM}:
+            m = m()
+            c2 = m.width_list  # 返回通道列表
+            backbone = True
         elif m is nn.BatchNorm2d:
             args = [ch[f]]
         elif m is Concat:
             c2 = sum(ch[x] for x in f)
         elif m in {Detect, Segment}:
-            # args.append([ch[x] for x in f])
-            args.append([256, 512, 512])  # for ts-sam
+            args.append([ch[x] for x in f])
             if m is Segment:
                 args[2] = make_divisible(args[2] * gw, 8)
         else:
             c2 = ch[f]
 
-        m_ = nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
-        t = str(m)[8:-2].replace('__main__.', '')  # module type
+        if isinstance(c2, list):
+            m_ = m
+            m_.backbone = True
+        else:
+            m_ = nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
+            t = str(m)[8:-2].replace('__main__.', '')  # module type
         m.np = sum(x.numel() for x in m_.parameters())  # number params
-        m_.i, m_.f, m_.type = i, f, t  # attach index, 'from' index, type
+        m_.i, m_.f, m_.type = i + 3 if backbone else i, f, t  # attach index, 'from' index, type
         if verbose:
             LOGGER.info(f'{i:>3}{str(f):>20}{n_:>3}{m.np:10.0f}  {t:<45}{str(args):<30}')  # print
-        save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
+        save.extend(x % (i + 3 if backbone else i) for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
         layers.append(m_)
         if i == 0:
             ch = []
-        ch.append(c2)
+        if isinstance(c2, list):
+            ch.extend(c2)
+            c2=None
+            # if len(c2) != 5:
+            #     ch.insert(0, 0)
+        else:
+            ch.append(c2)
+
+        # m_ = nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
+        # t = str(m)[8:-2].replace('__main__.', '')  # module type
+        # m.np = sum(x.numel() for x in m_.parameters())  # number params
+        # m_.i, m_.f, m_.type = i, f, t  # attach index, 'from' index, type
+        # if verbose:
+        #     LOGGER.info(f'{i:>3}{str(f):>20}{n_:>3}{m.np:10.0f}  {t:<45}{str(args):<30}')  # print
+        # save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
+        # layers.append(m_)
+        # if i == 0:
+        #     ch = []
+        # ch.append(c2)
     return nn.Sequential(*layers), sorted(save)

@@ -18,39 +18,16 @@ c3 1 256 64 64    -->1 256 32 32
 '''
 
 class FeatureFusionDecoder(nn.Module):
-    def __init__(self, in_dims):
+    def __init__(self, in_channels=256, out_channels=[256, 512, 1024]):
         super(FeatureFusionDecoder, self).__init__()
 
-        c1_tgt_dims = 256
-        c2_tgt_dims = 512
-        c3_tgt_dims = 512
-
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(in_dims, c1_tgt_dims, 2, stride=2, padding=0, bias=False),
-            nn.BatchNorm2d(c1_tgt_dims),
-            nn.ReLU()
-        )
-
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(in_dims, 384, 2, stride=2, padding=0, bias=False),
-            nn.BatchNorm2d(384),
-            nn.ReLU(),# 1 384 32 32
-            nn.Conv2d(384, c2_tgt_dims, 2, stride=2, padding=0, bias=False),
-            nn.BatchNorm2d(c2_tgt_dims),
-            nn.ReLU(),# 1 512 16 16
-        )
-
-        self.conv3 = nn.Sequential(
-            nn.Conv2d(c2_tgt_dims, c3_tgt_dims, 2, stride=2, padding=0, bias=False),
-            nn.BatchNorm2d(c3_tgt_dims),
-            nn.ReLU()# 1 512 8 8
-        )
+        self.conv1 = nn.Conv2d(in_channels, out_channels[0], kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(out_channels[0], out_channels[1], kernel_size=3, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(out_channels[1], out_channels[2], kernel_size=3, stride=2, padding=1)
 
 
     def forward(self, x):
-        # x_c3:1* x_c2:2* x_c1:4*
-        x1 = self.conv1(x)
-        x2 = self.conv2(x)
-        x3 = self.conv3(x2)
-
-        return [x1, x2, x3]
+        p3 = self.conv1(x)  # b*256*64*64 -> b*out_channels[0]*64*64
+        p4 = self.conv2(p3)  # b*out_channels[0]*64*64 -> b*out_channels[1]*32*32
+        p5 = self.conv3(p4)  # b*out_channels[1]*32*32 -> b*out_channels[2]*16*16
+        return [p3, p4, p5]

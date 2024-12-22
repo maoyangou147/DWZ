@@ -28,22 +28,17 @@ class SAM(nn.Module):
             global_attn_indexes=(2,5,8,11),
             use_fft=False,
             scale_factor=3,
-            csa_block_indice=(0,1,2,3,4,5,6,7,8,9,10,11),     
-            mrm_block_indice=(0,1,2,3,4,5,6,7,8,9,10,11)
+            csa_block_indice=(9,10,11),     
+            mrm_block_indice=(9,10,11)
         )
-        self.mask_decoder = FeatureFusionDecoder(in_dims=256)
+        self.mask_decoder = FeatureFusionDecoder()
+        self.width_list = [256, 512, 1024]
 
         for name, para in self.image_encoder.named_parameters():
             if "csa_embedding" in name:
                 continue
-            elif "mrm_embedding" in name:
-                continue
             elif "csa_blocks" in name:
                 continue  
-            elif "mrm_blocks" in name:
-                continue
-            elif "fft_embedding" in name:
-                continue
             else:
                 para.requires_grad_(False)
 
@@ -55,15 +50,3 @@ class SAM(nn.Module):
         # feat_1, feat_2, feat_3 = self.features
 
 
-    def set_requires_grad(self, nets, requires_grad=False):
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
-        Parameters:
-            nets (network list)   -- a list of networks
-            requires_grad (bool)  -- whether the networks require gradients or not
-        """
-        if not isinstance(nets, list):
-            nets = [nets]
-        for net in nets:
-            if net is not None:
-                for param in net.parameters():
-                    param.requires_grad = requires_grad
