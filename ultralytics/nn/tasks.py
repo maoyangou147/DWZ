@@ -196,20 +196,33 @@ class DetectionModel(BaseModel):
                     return submodule
             return None
 
-        yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8l-seg.pt')['model']
+        yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8s-seg.pt')['model']
         # segment_ckpt = find_module_by_name(yolo_checkpoint, 'model.22')
-        segment_ckpt = yolo_checkpoint
 
-        # segment_dict = segment_ckpt.state_dict()
-        # keys_to_remove = ['cv2.2.0.conv.weight', 'cv3.0.2.weight', 'cv3.0.2.bias', 'cv3.1.2.weight', 'cv3.1.2.bias', 'cv3.2.0.conv.weight',
-        #                   'cv3.2.2.weight', 'cv3.2.2.bias', 'cv4.2.0.conv.weight']
-        # segment_dict = {f'1.{k}': v for k, v in segment_dict.items() if k not in keys_to_remove}
-        # merge_dict = {**sam_checkpoint, **segment_dict}
-        # self.model.load_state_dict(merge_dict, strict=False)
+        segment_dict = yolo_checkpoint.state_dict()
+
+        keys_to_remove = ['model.22.cv3.0.2.weight', 'model.22.cv3.0.2.bias', 
+                          'model.22.cv3.1.2.weight', 'model.22.cv3.1.2.bias', 
+                          'model.22.cv3.2.2.weight', 'model.22.cv3.2.2.bias']
+        segment_dict = {k: v for k, v in segment_dict.items() if k not in keys_to_remove}
+
+        old_substrings = ['model.9', 'model.12', 'model.15', 'model.16', 'model.18', 'model.19', 'model.21', 'model.22']
+        new_substrings = ['1', '4', '7', '8', '10', '11', '13', '14']
+        modified_dict = {}
+        for key, value in segment_dict.items():
+            for old, new in zip(old_substrings, new_substrings):
+                if old in key:
+                    # 使用新子串替换旧子串
+                    key = key.replace(old, new)
+                    modified_dict[key] = value
+                    break  # 如果已经找到并替换了，则跳出循环
+
+        merge_dict = {**sam_checkpoint, **modified_dict}
+        self.model.load_state_dict(merge_dict, strict=False)
         # for name, param in self.model.named_parameters():
         #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
-        for name, param in segment_ckpt.named_parameters():
-            print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
+        # for name, param in segment_ckpt.named_parameters():
+        #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
 
         if verbose:
             self.info()
