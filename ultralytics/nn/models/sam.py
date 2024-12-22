@@ -28,8 +28,8 @@ class SAM(nn.Module):
             global_attn_indexes=(2,5,8,11),
             use_fft=False,
             scale_factor=3,
-            csa_block_indice=(9,10,11),     
-            mrm_block_indice=(9,10,11)
+            csa_block_indice=(10,11),     
+            mrm_block_indice=(10,11)
         )
         self.mask_decoder = FeatureFusionDecoder()
         self.width_list = [256, 512, 1024]
@@ -47,6 +47,5 @@ class SAM(nn.Module):
         features = self.image_encoder(x)
         output = self.mask_decoder(features)
         return output
-        # feat_1, feat_2, feat_3 = self.features
 
 

@@ -230,6 +230,7 @@ class ImageEncoderViT_TS(nn.Module):
         x_csa, _ = self.csa_blocks[0](x_in, x_csa)
 
         j, k = 1, 0
+        output = []
         for i, blk in enumerate(self.blocks):
             x = blk(x)
 
@@ -249,7 +250,6 @@ class ImageEncoderViT_TS(nn.Module):
         x = self.neck(x.permute(0, 3, 1, 2))
         # x_mrm = self.mrm_blocks[-1](x, x_mrm)
         x_csa, x = self.csa_blocks[-1](x, x_csa)
-
         # x_mrm.append(x_csa)
 
         return x_csa
