@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .mmseg.models.sam import ImageEncoderViT_TS, FeatureAdapter
+from .mmseg.models.sam import ImageEncoderViT_TS, FeatureAdapter, ImageEncoderViT
 
 class SAM(nn.Module):
     def __init__(self):
@@ -31,6 +31,23 @@ class SAM(nn.Module):
             csa_block_indice=(9,10,11),     
             mrm_block_indice=(9,10,11)
         )
+        # self.image_encoder = ImageEncoderViT(
+        #     img_size=1024,
+        #     patch_size=16,
+        #     in_chans=3,
+        #     embed_dim=768,
+        #     depth=12,
+        #     num_heads=12,
+        #     mlp_ratio=4,
+        #     out_chans=256,
+        #     qkv_bias=True,
+        #     norm_layer=partial(torch.nn.LayerNorm, eps=1e-6),
+        #     act_layer=nn.GELU,
+        #     use_rel_pos=True,
+        #     rel_pos_zero_init=True,
+        #     window_size=14,
+        #     global_attn_indexes=(2,5,8,11)
+        # )
         self.mask_decoder = FeatureAdapter()
         self.width_list = [256, 512,512]
 
