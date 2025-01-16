@@ -10,4 +10,4 @@ from .mask_decoder import MaskDecoder
 from .prompt_encoder import PromptEncoder
 from .transformer import TwoWayTransformer
 from .image_encoder_ts import ImageEncoderViT_TS
-from .feature_fusion_decoder import FeatureFusionDecoder
+from .FeatureAdapter import FeatureAdapter

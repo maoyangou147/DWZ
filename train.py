@@ -2,7 +2,7 @@ from ultralytics import YOLO
 
 # Load a model
 # model = YOLO("yolov8n-seg-dwz.yaml")  # build a new model from scratch
-model = YOLO("samv8s-seg.yaml")  # build a new model from scratch
+model = YOLO("samv8l-seg.yaml")  # build a new model from scratch
 # model = YOLO("/home/bob/experiment/dwz/yolov8l-seg.pt")  # load a pretrained model (recommended for training)
 
 # Use the model

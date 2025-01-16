@@ -197,8 +197,7 @@ class DetectionModel(BaseModel):
         yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8l-seg.pt')['model']
         segment_ckpt = find_module_by_name(yolo_checkpoint, 'model.22')
         segment_dict = segment_ckpt.state_dict()
-        keys_to_remove = ['cv2.2.0.conv.weight', 'cv3.0.2.weight', 'cv3.0.2.bias', 'cv3.1.2.weight', 'cv3.1.2.bias', 'cv3.2.0.conv.weight',
-                          'cv3.2.2.weight', 'cv3.2.2.bias', 'cv4.2.0.conv.weight']
+        keys_to_remove = ['cv3.0.2.weight', 'cv3.0.2.bias', 'cv3.1.2.weight', 'cv3.1.2.bias', 'cv3.2.2.weight', 'cv3.2.2.bias']
         segment_dict = {f'1.{k}': v for k, v in segment_dict.items() if k not in keys_to_remove}
         merge_dict = {**sam_checkpoint, **segment_dict}
         self.model.load_state_dict(merge_dict, strict=False)

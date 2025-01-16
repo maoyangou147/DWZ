@@ -9,7 +9,7 @@ model: null # i.e. yolov8n.pt, yolov8n.yaml. Path to model file
 data: null # i.e. coco128.yaml. Path to data file
 epochs: 100 # number of epochs to train for
 patience: 50  # TODO: epochs to wait for no observable improvement for early stopping of training
-batch: 2 # number of images per batch
+batch: 4 # number of images per batch
 imgsz: 640 # size of input images
 save: True # save checkpoints
 cache: False # True/ram, disk or False. Use cache for data loading
@@ -19,7 +19,7 @@ project: null # project name
 name: null # experiment name
 exist_ok: False # whether to overwrite existing experiment
 pretrained: False # whether to use a pretrained model
-optimizer: 'SGD' # optimizer to use, choices=['SGD', 'Adam', 'AdamW', 'RMSProp']
+optimizer: 'Adam' # optimizer to use, choices=['SGD', 'Adam', 'AdamW', 'RMSProp']
 verbose: False # whether to print verbose output
 seed: 0 # random seed for reproducibility
 deterministic: True # whether to enable deterministic mode
@@ -73,7 +73,7 @@ workspace: 4  # TensorRT: workspace size (GB)
 nms: False  # CoreML: add NMS
 
 # Hyperparameters ------------------------------------------------------------------------------------------------------
-lr0: 0.0008  # initial learning rate (SGD=1E-2, Adam=1E-3)
+lr0: 0.001  # initial learning rate (SGD=1E-2, Adam=1E-3)
 lrf: 1.0e-7  # final OneCycleLR learning rate (lr0 * lrf)
 momentum: 0.937  # SGD momentum/Adam beta1
 weight_decay: 0.0005  # optimizer weight decay 5e-4

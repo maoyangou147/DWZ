@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .mmseg.models.sam import ImageEncoderViT_TS, FeatureFusionDecoder
+from .mmseg.models.sam import ImageEncoderViT_TS, FeatureAdapter
 
 class SAM(nn.Module):
     def __init__(self):
@@ -31,8 +31,8 @@ class SAM(nn.Module):
             csa_block_indice=(9,10,11),     
             mrm_block_indice=(9,10,11)
         )
-        self.mask_decoder = FeatureFusionDecoder()
-        self.width_list = [256, 512, 1024]
+        self.mask_decoder = FeatureAdapter()
+        self.width_list = [256, 512,512]
 
         for name, para in self.image_encoder.named_parameters():
             if "csa_embedding" in name:
