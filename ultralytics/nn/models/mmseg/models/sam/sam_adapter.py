@@ -134,8 +134,8 @@ class ImageEncoderViT(nn.Module):
         x = self.patch_embed(x)
 
         embedding_feature = self.prompt_generator.init_embeddings(x)
-        handcrafted_feature = self.prompt_generator.init_handcrafted(inp)
-        prompt = self.prompt_generator.get_prompt(handcrafted_feature, embedding_feature)
+        # handcrafted_feature = self.prompt_generator.init_handcrafted(inp)
+        prompt = self.prompt_generator.get_prompt(embedding_feature)
         if self.pos_embed is not None:
             x = x + self.pos_embed
 
@@ -269,14 +269,12 @@ class PromptGenerator(nn.Module):
         x = self.fft(x, self.freq_nums)
         return self.prompt_generator(x)
 
-    def get_prompt(self, handcrafted_feature, embedding_feature):
-        N, C, H, W = handcrafted_feature.shape
-        handcrafted_feature = handcrafted_feature.view(N, C, H*W).permute(0, 2, 1)
+    def get_prompt(self, embedding_feature):
         prompts = []
         for i in range(self.depth):
             lightweight_mlp = getattr(self, 'lightweight_mlp_{}'.format(str(i)))
             # prompt = proj_prompt(prompt)
-            prompt = lightweight_mlp(handcrafted_feature + embedding_feature)
+            prompt = lightweight_mlp(embedding_feature)
             prompts.append(self.shared_mlp(prompt))
         return prompts
 
