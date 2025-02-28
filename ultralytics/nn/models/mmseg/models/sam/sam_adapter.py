@@ -141,8 +141,11 @@ class ImageEncoderViT(nn.Module):
 
         B, H, W = x.shape[0], x.shape[1], x.shape[2]
         outs = []
+
+        prompt_num = [8,9,10,11]
         for i, blk in enumerate(self.blocks):
-            x = prompt[i].reshape(B, H, W, -1) + x
+            if i in prompt_num:
+                x = prompt[i-8].reshape(B, H, W, -1) + x
             x = blk(x)
             if i in self.out_indices:
                 outs.append(x)
@@ -232,7 +235,8 @@ class PromptGenerator(nn.Module):
 
         self.shared_mlp = nn.Linear(self.embed_dim//self.scale_factor, self.embed_dim)
         self.embedding_generator = nn.Linear(self.embed_dim, self.embed_dim//self.scale_factor)
-        for i in range(self.depth):
+        # for i in range(self.depth):
+        for i in range(4):
             lightweight_mlp = nn.Sequential(
                 nn.Linear(self.embed_dim//self.scale_factor, self.embed_dim//self.scale_factor),
                 nn.GELU()
@@ -271,7 +275,8 @@ class PromptGenerator(nn.Module):
 
     def get_prompt(self, embedding_feature):
         prompts = []
-        for i in range(self.depth):
+        # for i in range(self.depth):
+        for i in range(4):
             lightweight_mlp = getattr(self, 'lightweight_mlp_{}'.format(str(i)))
             # prompt = proj_prompt(prompt)
             prompt = lightweight_mlp(embedding_feature)
