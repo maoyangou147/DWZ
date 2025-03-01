@@ -48,8 +48,16 @@ class SAM(nn.Module):
         #     window_size=14,
         #     global_attn_indexes=(2,5,8,11)
         # )
-        self.mask_decoder = FeatureAdapter()
-        self.width_list = [256, 512,512]
+        self.mask_decoder = FeatureAdapter(c1=64, c2=128, c3=256)   # yolo v8n
+        # self.mask_decoder = FeatureAdapter(c1=128, c2=256, c3=512)   # yolo v8s
+        # self.mask_decoder = FeatureAdapter(c1=192, c2=384, c3=576)   # yolo v8m
+        # self.mask_decoder = FeatureAdapter(c1=256, c2=512, c3=512)   # yolo v8l
+        # self.mask_decoder = FeatureAdapter(c1=320, c2=640, c3=640)   # yolo v8x
+        self.width_list = [64, 128, 256]   # yolo v8n
+        # self.width_list = [128, 256, 512]   # yolo v8s
+        # self.width_list = [192, 384, 576]   # yolo v8m
+        # self.width_list = [256, 512, 512]   # yolo v8l
+        # self.width_list = [320, 640, 640]   # yolo v8x
 
         for name, para in self.image_encoder.named_parameters():
             if "csa_embedding" in name:
