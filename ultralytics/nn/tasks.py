@@ -184,7 +184,7 @@ class DetectionModel(BaseModel):
 
         # Init weights, biases
         initialize_weights(self)
-        sam_checkpoint = torch.load('/home/bob/experiment/ckpt/sam_vit_b_01ec64.pth')
+        sam_checkpoint = torch.load('/root/ckpt/sam_vit_b_01ec64.pth')
         sam_checkpoint = {f'0.{k}': v for k, v in sam_checkpoint.items() if 'image_encoder' in k}
 
         # # 定义辅助函数来递归查找特定模块
@@ -194,7 +194,7 @@ class DetectionModel(BaseModel):
                     return submodule
             return None
 
-        yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8n-seg.pt')['model']
+        yolo_checkpoint = torch.load('/root/ckpt/yolov8n-seg.pt')['model']
         segment_ckpt = find_module_by_name(yolo_checkpoint, 'model.22')
         segment_dict = segment_ckpt.state_dict()
 
