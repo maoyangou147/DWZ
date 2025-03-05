@@ -11,3 +11,4 @@ from .prompt_encoder import PromptEncoder
 from .transformer import TwoWayTransformer
 from .image_encoder_ts import ImageEncoderViT_TS
 from .FeatureAdapter import FeatureAdapter
+from .pure_sam import PureViT

@@ -5,12 +5,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .mmseg.models.sam import ImageEncoderViT_TS, FeatureAdapter, ImageEncoderViT
+from .mmseg.models.sam import ImageEncoderViT_TS, FeatureAdapter, ImageEncoderViT, PureViT
 
 class SAM(nn.Module):
     def __init__(self):
         super().__init__()
-        self.image_encoder = ImageEncoderViT_TS(
+        self.image_encoder = PureViT(
             img_size=1024,
             patch_size=16,
             in_chans=3,
@@ -25,11 +25,7 @@ class SAM(nn.Module):
             use_rel_pos=True,
             rel_pos_zero_init=True,
             window_size=14,
-            global_attn_indexes=(2,5,8,11),
-            use_fft=False,
-            scale_factor=3,
-            csa_block_indice=(9,10,11),     
-            mrm_block_indice=(9,10,11)
+            global_attn_indexes=(2,5,8,11)
         )
         # self.image_encoder = ImageEncoderViT(
         #     img_size=1024,
