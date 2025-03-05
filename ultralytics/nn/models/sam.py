@@ -28,7 +28,7 @@ class SAM(nn.Module):
             global_attn_indexes=(2,5,8,11),
             use_fft=False,
             scale_factor=3,
-            csa_block_indice=(6,7,8,9,10,11),     
+            csa_block_indice=(2,3,4,5,6,7,8,9,10,11),     
             mrm_block_indice=(9,10,11)
         )
         # self.image_encoder = ImageEncoderViT(
