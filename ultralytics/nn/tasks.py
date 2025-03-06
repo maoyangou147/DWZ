@@ -183,9 +183,9 @@ class DetectionModel(BaseModel):
             m.bias_init()  # only run once
 
         # Init weights, biases
-        initialize_weights(self)
-        sam_checkpoint = torch.load('/home/bob/experiment/ckpt/sam_vit_b_01ec64.pth')
-        sam_checkpoint = {f'0.{k}': v for k, v in sam_checkpoint.items() if 'image_encoder' in k}
+        # initialize_weights(self)
+        # sam_checkpoint = torch.load('/home/bob/experiment/ckpt/sam_vit_b_01ec64.pth')
+        # sam_checkpoint = {f'0.{k}': v for k, v in sam_checkpoint.items() if 'image_encoder' in k}
 
         # # 定义辅助函数来递归查找特定模块
         def find_module_by_name(module, name):
@@ -205,8 +205,8 @@ class DetectionModel(BaseModel):
         # yolo v8n
         segment_dict = {f'1.{k}': v for k, v in segment_dict.items() if "cv3" not in k}
 
-        merge_dict = {**sam_checkpoint, **segment_dict}
-        self.model.load_state_dict(merge_dict, strict=False)
+        # merge_dict = {**sam_checkpoint, **segment_dict}
+        self.model.load_state_dict(segment_dict, strict=False)
         # for name, param in self.model.named_parameters():
         #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
         # for name, param in segment_ckpt.named_parameters():
