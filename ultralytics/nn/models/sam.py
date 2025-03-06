@@ -32,9 +32,10 @@ class LoRA(nn.Module):
 
 def apply_lora(
     model: nn.Module, 
-    r: int = 8, 
+    r: int = 24, 
     alpha: float = 1.0, 
-    target_layers: list = ["attn.qkv", "attn.proj"]
+    # target_layers: list = ["11.attn.qkv", "11.attn.proj"]
+    target_layers: list = ["11.attn.qkv"]
 ) -> nn.Module:
     """
     将模型中的目标线性层替换为 LoRA 模块
@@ -79,7 +80,7 @@ class SAM(nn.Module):
         #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
         vit_model.load_state_dict(sam_checkpoint)
 
-        self.image_encoder = apply_lora(vit_model, r=8, alpha=16.0)
+        self.image_encoder = apply_lora(vit_model, r=24, alpha=1.0)
 
 
         self.mask_decoder = FeatureAdapter(c1=64, c2=128, c3=256)   # yolo v8n
