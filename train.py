@@ -3,7 +3,7 @@ from ultralytics import YOLO
 # Load a model
 # model = YOLO("yolov8n-seg-dwz.yaml")  # build a new model from scratch
 model = YOLO("samv8n-seg.yaml")  # build a new model from scratch
-# model = YOLO("/home/bob/experiment/dwz/yolov8n-seg.pt")  # load a pretrained model (recommended for training)
+# model = YOLO("/root/save/linear_probe/weights/best.pt")  # load a pretrained model (recommended for training)
 
 # Use the model
 results = model.train(data="/root/code/DWZ/ultralytics/yolo/data/datasets/dwz-seg.yaml", epochs=60, imgsz=1024)  # train the model
