@@ -74,7 +74,7 @@ class SAM(nn.Module):
             global_attn_indexes=(2,5,8,11)
         )
 
-        sam_checkpoint = torch.load('/home/bob/experiment/ckpt/sam_vit_b_01ec64.pth')
+        sam_checkpoint = torch.load('/root/ckpt/sam_vit_b_01ec64.pth')
         sam_checkpoint = {k.replace("image_encoder.", "", 1): v for k, v in sam_checkpoint.items() if 'image_encoder' in k}
         # for name, param in sam_checkpoint.items():
         #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")

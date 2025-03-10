@@ -194,7 +194,7 @@ class DetectionModel(BaseModel):
                     return submodule
             return None
 
-        yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8n-seg.pt')['model']
+        yolo_checkpoint = torch.load('/root/ckpt/yolov8n-seg.pt')['model']
         segment_ckpt = find_module_by_name(yolo_checkpoint, 'model.22')
         segment_dict = segment_ckpt.state_dict()
 
