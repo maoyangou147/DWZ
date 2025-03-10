@@ -114,7 +114,8 @@ class BaseTrainer:
 
         # Device
         self.device = utils.torch_utils.select_device(self.args.device, self.batch_size)
-        self.amp = self.device.type != 'cpu'
+        #self.amp = self.device.type != 'cpu'
+        self.amp = False
         self.scaler = amp.GradScaler(enabled=self.amp)
         if self.device.type == 'cpu':
             self.args.workers = 0  # faster CPU training as time dominated by inference, not dataloading
@@ -298,6 +299,13 @@ class BaseTrainer:
 
                 # Backward
                 self.scaler.scale(self.loss).backward()
+
+                # 在训练循环中监控梯度
+                # for name, param in self.model.named_parameters():
+                #     if param.grad is not None and ("qkv.A" in name or "qkv.B" in name):
+                #         print(f"{name} gradient: mean={param.grad.mean().item():.3f}, std={param.grad.std().item():.3f}")
+                #     if param.grad is not None and ("cv2.0.0.conv.weight" in name or "cv2.0.0.bn.weight" in name):
+                #         print(f"{name} gradient: mean={param.grad.mean().item():.3f}, std={param.grad.std().item():.3f}")
 
                 # Optimize - https://pytorch.org/docs/master/notes/amp_examples.html
                 if ni - last_opt_step >= self.accumulate:

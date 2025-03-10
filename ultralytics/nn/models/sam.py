@@ -10,15 +10,10 @@ from .mmseg.models.sam import ImageEncoderViT_TS, FeatureAdapter, LoraViT
 class LoRA(nn.Module):
     def __init__(self, base_layer: nn.Linear, r: int = 8, alpha: float = 1.0):
         super().__init__()
-        self.base_layer = base_layer  # 原始线性层（冻结）
+        self.base_layer = base_layer
         self.r = r
         self.alpha = alpha
 
-        # 冻结原始参数
-        for param in self.base_layer.parameters():
-            param.requires_grad = False
-
-        # 初始化低秩矩阵
         d_in, d_out = base_layer.in_features, base_layer.out_features
         self.A = nn.Parameter(torch.randn(d_in, r))
         self.B = nn.Parameter(torch.zeros(r, d_out))
@@ -27,15 +22,20 @@ class LoRA(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         base_output = self.base_layer(x)
         lora_output = (x @ self.A @ self.B) * self.alpha
+        # print(
+        #     f"LoRA 项统计: max={lora_output.abs().max().item():.3e}, "
+        #     f"mean={lora_output.mean().item():.3e}, std={lora_output.std().item():.3e}"
+        # )
+
         return base_output + lora_output
 
 
 def apply_lora(
     model: nn.Module, 
-    r: int = 24, 
+    r: int = 8, 
     alpha: float = 1.0, 
-    # target_layers: list = ["11.attn.qkv", "11.attn.proj"]
-    target_layers: list = ["11.attn.qkv"]
+    target_layers: list = ["11.attn.qkv", "11.attn.proj"]
+    # target_layers: list = ["11.attn.qkv"]
 ) -> nn.Module:
     """
     将模型中的目标线性层替换为 LoRA 模块
@@ -95,10 +95,8 @@ class SAM(nn.Module):
         # self.width_list = [320, 640, 640]   # yolo v8x
 
         for name, para in self.image_encoder.named_parameters():
-            if "base_layer" in name:
-                continue
-            elif "A" in name or "B" in name:
-                continue  
+            if "A" in name or "B" in name:
+                para.requires_grad_(True)  
             else:
                 para.requires_grad_(False)
 
