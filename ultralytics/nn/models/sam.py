@@ -7,6 +7,7 @@ import torch.nn.functional as F
 
 from .mmseg.models.sam import ImageEncoderViT_TS, FeatureAdapter, LoraViT
 
+
 class LoRA(nn.Module):
     def __init__(self, base_layer: nn.Linear, r: int = 8, alpha: float = 1.0):
         super().__init__()
@@ -28,6 +29,33 @@ class LoRA(nn.Module):
         # )
 
         return base_output + lora_output
+
+
+'''
+class LoRA(nn.Module):
+    def __init__(self, base_layer, r=8, alpha=1.0):
+        super().__init__()
+        self.base = base_layer
+        self.A = nn.Parameter(torch.randn(base_layer.in_features, r) * 0.02)  # 缩小初始化
+        self.B = nn.Parameter(torch.zeros(r, base_layer.out_features))
+        self.alpha = alpha / r  # 动态缩放因子
+        
+    def forward(self, x):
+        # 输入规范化
+        x = x.to(torch.float32)  # 强制FP32计算
+        x = x / (x.norm(dim=1, keepdim=True) + 1e-6)  # L2规范化
+        
+        # 安全矩阵乘法
+        lora_output = (x @ self.A.clamp(-5,5) @ self.B.clamp(-5,5)) * self.alpha
+        lora_output = lora_output.clamp(-10, 10)  # 输出限幅
+        
+        print(
+            f"LORA 项统计:max={lora_output.abs().max().item():.3e},"
+            f"mean={lora_output.mean().item():.3e}, std={lora_output.std().item():.3e}"
+        )
+        
+        return self.base(x) + lora_output.to(x.dtype)
+'''
 
 
 def apply_lora(
@@ -80,7 +108,7 @@ class SAM(nn.Module):
         #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
         vit_model.load_state_dict(sam_checkpoint)
 
-        self.image_encoder = apply_lora(vit_model, r=24, alpha=1.0)
+        self.image_encoder = apply_lora(vit_model, r=8, alpha=1.0)
 
 
         self.mask_decoder = FeatureAdapter(c1=64, c2=128, c3=256)   # yolo v8n

@@ -301,11 +301,11 @@ class BaseTrainer:
                 self.scaler.scale(self.loss).backward()
 
                 # 在训练循环中监控梯度
-                # for name, param in self.model.named_parameters():
-                #     if param.grad is not None and ("qkv.A" in name or "qkv.B" in name):
-                #         print(f"{name} gradient: mean={param.grad.mean().item():.3f}, std={param.grad.std().item():.3f}")
-                #     if param.grad is not None and ("cv2.0.0.conv.weight" in name or "cv2.0.0.bn.weight" in name):
-                #         print(f"{name} gradient: mean={param.grad.mean().item():.3f}, std={param.grad.std().item():.3f}")
+                for name, param in self.model.named_parameters():
+                    if param.grad is not None and ("qkv.A" in name or "qkv.B" in name):
+                        print(f"{name} gradient: mean={param.grad.mean().item():.3f}, std={param.grad.std().item():.3f}")
+                    if param.grad is not None and ("cv2.0.0.conv.weight" in name or "cv2.0.0.bn.weight" in name):
+                        print(f"{name} gradient: mean={param.grad.mean().item():.3f}, std={param.grad.std().item():.3f}")
 
                 # Optimize - https://pytorch.org/docs/master/notes/amp_examples.html
                 if ni - last_opt_step >= self.accumulate:
@@ -406,7 +406,7 @@ class BaseTrainer:
 
     def optimizer_step(self):
         self.scaler.unscale_(self.optimizer)  # unscale gradients
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=10.0)  # clip gradients
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=0.5)  # clip gradients
         self.scaler.step(self.optimizer)
         self.scaler.update()
         self.optimizer.zero_grad()

@@ -211,6 +211,10 @@ class DetectionModel(BaseModel):
         #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
         # for name, param in segment_ckpt.named_parameters():
         #     print(f"Parameter name: {name}, Shape: {tuple(param.shape)}")
+        
+        for name, param in self.model.named_parameters():
+            if name.startswith("1."):  # 检查参数名是否以 "1." 开头
+                param.requires_grad = False  # 冻结参数
 
         # unfrozen = [name for name, param in self.model.named_parameters() if param.requires_grad]
         # print("未冻结参数:", unfrozen)  # 输出：['fc2.weight', 'fc2.bias']
