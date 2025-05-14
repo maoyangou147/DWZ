@@ -2,13 +2,15 @@
 
 import hydra
 import torch
+import cv2
+import numpy as np
 
 from ultralytics.yolo.utils import DEFAULT_CONFIG, ROOT, ops
 from ultralytics.yolo.utils.checks import check_imgsz
 from ultralytics.yolo.utils.plotting import colors, save_one_box
 
 from ultralytics.yolo.v8.detect.predict import DetectionPredictor
-
+from ultralytics.yolo.engine.predictor import BasePredictor
 
 class SegmentationPredictor(DetectionPredictor):
 
@@ -110,9 +112,15 @@ def predict(cfg):
     cfg.imgsz = check_imgsz(cfg.imgsz, min_dim=2)  # check image size
     cfg.source = cfg.source if cfg.source is not None else ROOT / "assets"
 
+    cfg.model = "/home/bob/dataset/dwz_test/model/last.pt"
+    # cfg.model = "/home/bob/experiment/dwz/yolov8s-seg.pt"
+    cfg.source="/home/bob/dataset/dwz_test/data/dwz_test3.mp4"
+    cfg.imgsz=(1024,1024)
+
     predictor = SegmentationPredictor(cfg)
-    # predictor.predict_cli()
-    predictor()
+    predictor.predict_cli()
+    # predictor.predict()
+
 
     # python predict.py model=yolov8n-seg.pt source="/home/bob/dataset/dwz_test/train/images/18.png"
 

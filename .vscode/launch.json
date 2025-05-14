@@ -10,8 +10,9 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}"
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}/ultralytics/yolo/v8/segment/"
+            //"cwd": "${workspaceFolder}"
         }
     ]
 }
