@@ -110,9 +110,14 @@ def predict(cfg):
     cfg.imgsz = check_imgsz(cfg.imgsz, min_dim=2)  # check image size
     cfg.source = cfg.source if cfg.source is not None else ROOT / "assets"
 
+    cfg.model = "/root/infer/model/sam_lora.pt"
+    # cfg.model = "/home/bob/experiment/dwz/yolov8s-seg.pt"
+    cfg.source="/root/infer/input/dwz_test3.mp4"
+    cfg.imgsz=(1024,1024)
+    
     predictor = SegmentationPredictor(cfg)
-    # predictor.predict_cli()
-    predictor()
+    predictor.predict_cli()
+    # predictor()
 
     # python predict.py model=yolov8n-seg.pt source="/home/bob/dataset/dwz_test/train/images/18.png"
 
