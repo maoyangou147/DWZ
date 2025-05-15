@@ -2,6 +2,7 @@
 
 import contextlib
 from copy import deepcopy
+from collections import OrderedDict
 
 import thop
 import torch
@@ -164,7 +165,20 @@ class DetectionModel(BaseModel):
             m.bias_init()  # only run once
 
         # Init weights, biases
-        initialize_weights(self)
+        # initialize_weights(self)
+        yolo_checkpoint = torch.load('/home/bob/experiment/dwz/yolov8n-seg.pt')['model'].state_dict()
+        new_state_dict = OrderedDict()
+        for key, value in yolo_checkpoint.items():
+            # if key.startswith('model.22.'):
+            new_state_dict[key] = value
+        self.model.load_state_dict(new_state_dict, strict=False)
+
+        for name, param in self.model.named_parameters():
+            if not name.startswith('22.'): 
+                param.requires_grad_(False) 
+            else:
+                param.requires_grad_(True) 
+
         if verbose:
             self.info()
             LOGGER.info('')
